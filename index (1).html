@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>拾光 · 情绪日记</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #F4F1E9;
+    --bg-panel: #FFFFFF;
+    --ink: #2B2A33;
+    --ink-soft: #6B6976;
+    --line: #E7E3D8;
+    --indigo: #4A4470; --indigo-soft: #EFEDF7;
+    --sage: #5E8C63;   --sage-soft: #E6EFE3;
+    --coral: #D97B5F;  --coral-soft: #FBE8E0;
+    --amber: #B0812F;  --amber-soft: #F5E9D2;
+    --teal: #3E8C86;   --teal-soft: #DFEFED;
+    --blue: #5C79A0;   --blue-soft: #E7ECF4;
+    --shadow: 0 1px 2px rgba(43,42,51,0.05), 0 10px 28px rgba(43,42,51,0.07);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1B1A20; --bg-panel:#252330; --ink:#EDEBF2; --ink-soft:#A8A5B5; --line:#3A3844;
+      --indigo:#B8AEE0; --indigo-soft:#312D45;
+      --sage:#9BC29F; --sage-soft:#24302A;
+      --coral:#E79A80; --coral-soft:#3A2A25;
+      --amber:#DCB35F; --amber-soft:#382E1D;
+      --teal:#7FC4BC;  --teal-soft:#20302E;
+      --blue:#9AB4D6;  --blue-soft:#232B3A;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1B1A20; --bg-panel:#252330; --ink:#EDEBF2; --ink-soft:#A8A5B5; --line:#3A3844;
+    --indigo:#B8AEE0; --indigo-soft:#312D45;
+    --sage:#9BC29F; --sage-soft:#24302A;
+    --coral:#E79A80; --coral-soft:#3A2A25;
+    --amber:#DCB35F; --amber-soft:#382E1D;
+    --teal:#7FC4BC;  --teal-soft:#20302E;
+    --blue:#9AB4D6;  --blue-soft:#232B3A;
+  }
+  html{scroll-padding-top: env(safe-area-inset-top, 0px); background:var(--bg);}
+  body{
+    margin:0; color:var(--ink);
+    font-family:'Inter',-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100%;
+    background:
+      radial-gradient(700px 380px at 15% -8%, rgba(74,68,112,0.07), transparent 60%),
+      radial-gradient(600px 340px at 100% 0%, rgba(94,140,99,0.06), transparent 55%),
+      var(--bg);
+  }
+  .wrap{max-width:660px; margin:0 auto; padding:30px 20px 90px;}
+  header.top{margin-bottom:20px;}
+  header.top h1{
+    font-family:'Fraunces',serif; font-weight:600; font-size:28px; margin:0 0 2px;
+    letter-spacing:-0.01em;
+  }
+  header.top .sub-line{color:var(--ink-soft); font-size:13px;}
+  header.top .sub-line b{color:var(--ink); font-weight:600;}
+
+  nav.tabs{
+    display:flex; gap:4px; background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:14px; padding:5px; margin-bottom:22px; box-shadow:var(--shadow);
+    position:sticky; top:10px; z-index:10;
+  }
+  nav.tabs button{
+    flex:1; border:none; background:transparent; padding:10px 6px; border-radius:10px;
+    font-family:'Inter'; font-size:13.5px; font-weight:600; color:var(--ink-soft); cursor:pointer;
+    transition:background .18s ease, color .18s ease;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  nav.tabs button.active{background:var(--indigo); color:#fff;}
+
+  section.view{display:none;}
+  section.view.active{display:block; animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  .card{
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:18px;
+    padding:22px; margin-bottom:16px; box-shadow:var(--shadow);
+  }
+  .card h2{
+    font-family:'Fraunces',serif; font-weight:600; font-size:18.5px; margin:0 0 4px;
+    padding-left:12px; border-left:3px solid var(--indigo);
+  }
+  .card .sub{color:var(--ink-soft); font-size:13px; margin:0 0 18px; padding-left:15px;}
+
+  /* mood grid */
+  .moods{display:grid; grid-template-columns:repeat(5,1fr); gap:8px;}
+  .mood-btn{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:13px 4px; border-radius:14px; border:1.5px solid var(--line);
+    background:transparent; cursor:pointer; font-family:'Inter';
+    transition:border-color .15s ease, background .15s ease, transform .12s ease;
+  }
+  .mood-btn:active{transform:scale(.94);}
+  .mood-btn .emoji{font-size:25px;}
+  .mood-btn .label{font-size:11.5px; color:var(--ink-soft);}
+  .mood-btn.selected{border-color:var(--indigo); background:var(--indigo-soft); transform:translateY(-2px);}
+  .mood-btn.selected .label{color:var(--indigo); font-weight:600;}
+
+  .row-label{font-size:13px; font-weight:700; margin:20px 0 9px; color:var(--ink);}
+
+  .slider-wrap{position:relative; padding-top:6px;}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:8px; border-radius:99px; outline:none;
+    background:linear-gradient(90deg, var(--sage), var(--amber) 50%, var(--coral));
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:24px; height:24px; border-radius:50%;
+    background:#fff; border:3px solid var(--indigo); cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,0.22); transition:transform .12s ease;
+  }
+  input[type=range]::-webkit-slider-thumb:active{transform:scale(1.15);}
+  input[type=range]::-moz-range-thumb{
+    width:24px; height:24px; border-radius:50%; background:#fff; border:3px solid var(--indigo); cursor:pointer;
+  }
+  .intensity-labels{display:flex; justify-content:space-between; font-size:11px; color:var(--ink-soft); margin-top:4px;}
+  .intensity-readout{
+    text-align:center; font-size:13px; font-weight:600; color:var(--indigo); margin-top:10px; min-height:18px;
+  }
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    padding:8px 15px; border-radius:999px; border:1.5px solid var(--line); background:transparent;
+    font-size:13px; color:var(--ink-soft); cursor:pointer; font-family:'Inter'; transition:all .15s ease;
+  }
+  .chip.selected{border-color:var(--coral); background:var(--coral-soft); color:var(--coral); font-weight:600;}
+  textarea, input[type=text]{
+    width:100%; border:1.5px solid var(--line); border-radius:12px; padding:12px 14px;
+    font-family:'Inter'; font-size:14px; color:var(--ink); background:var(--bg); resize:vertical;
+  }
+  textarea{min-height:64px;}
+  textarea:focus, input:focus, .mood-btn:focus-visible, .chip:focus-visible, button:focus-visible{
+    outline:2px solid var(--indigo); outline-offset:2px;
+  }
+  .btn-primary{
+    width:100%; margin-top:20px; padding:14px; border:none; border-radius:14px;
+    background:var(--indigo); color:#fff; font-family:'Inter'; font-weight:700; font-size:14.5px;
+    cursor:pointer; transition:opacity .15s ease, transform .1s ease;
+  }
+  .btn-primary:disabled{opacity:.4; cursor:not-allowed;}
+  .btn-primary:not(:disabled):active{opacity:.85; transform:scale(.99);}
+  .empty{text-align:center; padding:36px 12px; color:var(--ink-soft);}
+  .empty .big{font-size:32px; display:block; margin-bottom:10px;}
+
+  /* calendar heatmap */
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .cal-dow{font-size:10.5px; color:var(--ink-soft); text-align:center; padding-bottom:2px;}
+  .cal-cell{
+    aspect-ratio:1; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-size:11px; color:var(--ink-soft); cursor:pointer; border:1.5px solid transparent;
+    background:var(--line); transition:transform .12s ease, border-color .12s ease;
+  }
+  .cal-cell:hover{transform:scale(1.08);}
+  .cal-cell.selected{border-color:var(--indigo);}
+  .cal-cell.empty-cell{background:transparent; cursor:default;}
+  .cal-legend{display:flex; align-items:center; gap:6px; margin-top:12px; font-size:11px; color:var(--ink-soft); padding-left:15px;}
+  .cal-legend .sw{width:12px; height:12px; border-radius:4px;}
+  #dayDetail{margin-top:16px; padding-top:16px; border-top:1px solid var(--line); display:none;}
+  #dayDetail.show{display:block;}
+
+  /* timeline */
+  .timeline{position:relative; padding-left:28px;}
+  .timeline::before{content:''; position:absolute; left:10px; top:6px; bottom:6px; width:2px; background:var(--line);}
+  .tl-item{position:relative; padding-bottom:20px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-dot{
+    position:absolute; left:-28px; top:2px; width:21px; height:21px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px;
+    background:var(--bg-panel); border:2px solid var(--indigo); box-shadow:0 2px 5px rgba(0,0,0,0.08);
+  }
+  .tl-item .meta{font-size:12px; color:var(--ink-soft); margin-bottom:3px;}
+  .tl-item .tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
+  .tl-item .tags span{font-size:11px; background:var(--sage-soft); color:var(--sage); padding:2px 9px; border-radius:999px;}
+  .tl-item .note{font-size:13.5px; margin-top:5px; color:var(--ink); line-height:1.5;}
+
+  .insight-row{display:flex; align-items:center; gap:10px; margin-bottom:11px; padding-left:15px;}
+  .insight-row .bar-bg{flex:1; height:8px; background:var(--indigo-soft); border-radius:99px; overflow:hidden;}
+  .insight-row .bar-fill{height:100%; background:var(--indigo); border-radius:99px;}
+  .insight-row .label{font-size:13px; width:78px; flex-shrink:0;}
+  .insight-row .count{font-size:12px; color:var(--ink-soft); width:34px; text-align:right;}
+
+  /* reco cards */
+  .reco-card{
+    display:flex; gap:14px; padding:18px; border-radius:16px; border:1px solid var(--line);
+    margin-bottom:13px; align-items:flex-start; transition:box-shadow .15s ease;
+  }
+  .reco-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06);}
+  .reco-icon{
+    width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:21px; flex-shrink:0;
+  }
+  .reco-tag{
+    display:inline-block; font-size:10px; font-weight:700; letter-spacing:.03em;
+    padding:2.5px 9px; border-radius:999px; margin-bottom:7px;
+  }
+  .reco-card h3{font-size:15.5px; margin:0 0 4px; font-family:'Fraunces',serif; font-weight:600;}
+  .reco-card p{font-size:13px; color:var(--ink-soft); margin:0 0 11px; line-height:1.55;}
+  .reco-cta{
+    border:none; color:#fff; font-size:12.5px; font-weight:700; padding:8px 16px;
+    border-radius:999px; cursor:pointer; font-family:'Inter'; display:inline-flex; align-items:center; gap:5px;
+    transition:opacity .15s ease, transform .1s ease;
+  }
+  .reco-cta:active{transform:scale(.96); opacity:.85;}
+
+  .tool-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:2px; padding-left:15px;}
+  .tool-btn{
+    display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 8px;
+    border-radius:16px; border:1.5px solid var(--line); background:var(--bg-panel); cursor:pointer;
+    font-family:'Inter'; transition:border-color .15s ease, transform .12s ease, box-shadow .15s ease;
+  }
+  .tool-btn:active{transform:scale(.96);}
+  .tool-btn:hover{box-shadow:0 4px 14px rgba(0,0,0,0.06);}
+  .tool-btn .icon-circ{width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:19px;}
+  .tool-btn .lbl{font-size:12px; font-weight:700; color:var(--ink);}
+
+  /* overlay */
+  .overlay{
+    position:fixed; inset:0; background:rgba(24,23,29,0.6); display:none; align-items:center; justify-content:center;
+    z-index:50; padding:20px;
+  }
+  .overlay.active{display:flex;}
+  .overlay-box{
+    background:var(--bg-panel); border-radius:22px; padding:28px 24px; text-align:center; width:100%; max-width:360px;
+    max-height:88vh; overflow-y:auto;
+  }
+  .overlay-box h3{font-family:'Fraunces',serif; font-weight:600; margin:0 0 4px; font-size:18.5px;}
+  .overlay-box .sub{padding-left:0; text-align:center;}
+
+  .breathe-circle{
+    width:130px; height:130px; border-radius:50%; margin:22px auto; background:var(--indigo-soft);
+    border:2px solid var(--indigo); display:flex; align-items:center; justify-content:center;
+    font-size:15px; font-weight:700; color:var(--indigo); transition:transform 4s ease;
+  }
+  .breathe-circle.in{transform:scale(1.35);}
+  .breathe-circle.out{transform:scale(1);}
+
+  .stretch-illus{font-size:48px; margin:16px 0 6px;}
+  .stretch-timer{font-size:36px; font-weight:700; color:var(--indigo); font-family:'Fraunces',serif;}
+  .stretch-progress{display:flex; gap:5px; justify-content:center; margin:14px 0;}
+  .stretch-progress span{width:20px; height:5px; border-radius:99px; background:var(--line);}
+  .stretch-progress span.done{background:var(--sage);}
+  .stretch-progress span.now{background:var(--indigo);}
+
+  .overlay-actions{display:flex; gap:10px; margin-top:16px;}
+  .overlay-actions button{
+    flex:1; padding:10px; border-radius:12px; border:1.5px solid var(--line); background:transparent;
+    font-family:'Inter'; font-size:13px; font-weight:700; color:var(--ink-soft); cursor:pointer;
+  }
+  .overlay-actions button.primary{border-color:var(--indigo); color:var(--indigo);}
+  .close-x{background:none; border:none; color:var(--ink-soft); font-size:13px; cursor:pointer; margin-top:14px;}
+
+  /* bubble game */
+  .bubble-field{
+    position:relative; width:100%; height:320px; border-radius:18px; overflow:hidden;
+    background:linear-gradient(180deg, var(--indigo-soft), var(--bg-panel)); margin:14px 0;
+  }
+  .bubble{
+    position:absolute; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(74,68,112,0.35));
+    border:1px solid rgba(74,68,112,0.4); cursor:pointer; animation:rise linear forwards;
+  }
+  @keyframes rise{ from{ transform:translateY(0);} to{ transform:translateY(-340px);} }
+  .bubble.pop{ animation:none !important; transform:scale(1.6) !important; opacity:0 !important; transition:transform .25s ease, opacity .25s ease; }
+  .game-score{font-size:13px; color:var(--ink-soft); margin-bottom:2px;}
+
+  /* duration chips (walk) */
+  .dur-chips{display:flex; gap:8px; justify-content:center; margin:16px 0;}
+  .dur-chip{
+    padding:9px 16px; border-radius:999px; border:1.5px solid var(--line); background:transparent;
+    font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer;
+  }
+  .dur-chip.selected{border-color:var(--sage); background:var(--sage-soft); color:var(--sage);}
+  .walk-ring-wrap{position:relative; width:180px; height:180px; margin:8px auto;}
+  .walk-figure{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:44px;
+  }
+  .walk-figure.animate{animation:bounce 0.6s ease-in-out infinite;}
+  @keyframes bounce{0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);}}
+  .walk-time{font-size:28px; font-weight:700; color:var(--sage); font-family:'Fraunces',serif; margin-top:6px;}
+
+  /* sound player */
+  .sound-visual{display:flex; align-items:flex-end; justify-content:center; gap:4px; height:70px; margin:18px 0;}
+  .sound-visual .bar{width:7px; border-radius:4px; background:var(--amber); height:8px; transition:height .12s ease;}
+  .sound-presets{display:flex; gap:8px; justify-content:center; margin-bottom:6px;}
+  .sound-preset-btn{
+    padding:9px 14px; border-radius:999px; border:1.5px solid var(--line); background:transparent;
+    font-size:12.5px; font-weight:600; color:var(--ink-soft); cursor:pointer;
+  }
+  .sound-preset-btn.selected{border-color:var(--amber); background:var(--amber-soft); color:var(--amber);}
+  .play-toggle{
+    width:60px; height:60px; border-radius:50%; border:none; background:var(--amber); color:#fff;
+    font-size:22px; cursor:pointer; margin:10px auto; display:flex; align-items:center; justify-content:center;
+  }
+
+  /* journal */
+  .journal-field{text-align:left; margin-bottom:10px;}
+  .journal-field label{font-size:12px; color:var(--ink-soft); font-weight:600; display:block; margin-bottom:5px;}
+  .gratitude-hist{text-align:left; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); max-height:160px; overflow-y:auto;}
+  .gratitude-hist .g-item{font-size:12.5px; margin-bottom:10px;}
+  .gratitude-hist .g-date{color:var(--ink-soft); font-size:11px; margin-bottom:3px;}
+  .gratitude-hist ul{margin:0; padding-left:18px;}
+
+  /* rest checklist */
+  .rest-check{
+    display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--line);
+    cursor:pointer; text-align:left;
+  }
+  .rest-check:last-child{border-bottom:none;}
+  .rest-check .box{
+    width:21px; height:21px; border-radius:7px; border:2px solid var(--blue); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;
+  }
+  .rest-check.checked .box{background:var(--blue);}
+  .rest-check.checked .txt{text-decoration:line-through; color:var(--ink-soft);}
+  .rest-check .txt{font-size:13.5px;}
+
+  /* talk composer */
+  .starter-chip{
+    display:inline-block; background:var(--teal-soft); color:var(--teal); font-size:12.5px; font-weight:600;
+    padding:8px 14px; border-radius:12px; margin-bottom:12px; text-align:left;
+  }
+
+  .toast{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+    background:var(--ink); color:var(--bg); padding:11px 20px; border-radius:99px;
+    font-size:13px; opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:60;
+  }
+  .toast.show{opacity:1;}
+  canvas{max-width:100%;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>拾光</h1>
+    <div class="sub-line" id="greeting"></div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="log">📝 记录</button>
+    <button class="tab-btn" data-tab="review">📊 回顾</button>
+    <button class="tab-btn" data-tab="care">💛 自我关怀</button>
+  </nav>
+
+  <!-- 记录 -->
+  <section class="view active" id="view-log">
+    <div class="card">
+      <h2>此刻的心情</h2>
+      <p class="sub">选一个最接近的感受，不用很精确</p>
+      <div class="moods" id="moodGrid"></div>
+
+      <div class="row-label">强度</div>
+      <div class="slider-wrap">
+        <input type="range" min="1" max="5" value="3" id="intensity">
+        <div class="intensity-labels"><span>轻微</span><span>强烈</span></div>
+        <div class="intensity-readout" id="intensityReadout">中等 · 感受比较明显</div>
+      </div>
+
+      <div class="row-label">可能的触发因素（可多选）</div>
+      <div class="chips" id="triggerChips"></div>
+
+      <div class="row-label">想多说两句吗？</div>
+      <textarea id="noteInput" placeholder="发生了什么，或者只是随便写写…"></textarea>
+
+      <button class="btn-primary" id="saveBtn" disabled>记录这一刻</button>
+    </div>
+  </section>
+
+  <!-- 回顾 -->
+  <section class="view" id="view-review">
+    <div class="card">
+      <h2>情绪日历</h2>
+      <p class="sub">过去5周，颜色越暖代表状态越低落，越绿代表越舒展</p>
+      <div class="cal-grid" id="calDow"></div>
+      <div class="cal-grid" id="calGrid" style="margin-top:4px;"></div>
+      <div class="cal-legend">
+        <span>低落</span><span class="sw" style="background:var(--coral)"></span>
+        <span class="sw" style="background:var(--amber)"></span>
+        <span class="sw" style="background:var(--sage)"></span><span>舒展</span>
+      </div>
+      <div id="dayDetail"></div>
+    </div>
+
+    <div class="card">
+      <h2>情绪趋势</h2>
+      <p class="sub">最近的记录，越高代表状态越好</p>
+      <canvas id="trendChart" height="140"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>触发因素总览</h2>
+      <p class="sub">各类因素出现的频率分布</p>
+      <canvas id="radarChart" height="220"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>低落时刻最常伴随</h2>
+      <div id="insightList"></div>
+    </div>
+
+    <div class="card">
+      <h2>记录时间线</h2>
+      <div class="timeline" id="entryList"></div>
+    </div>
+  </section>
+
+  <!-- 自我关怀 -->
+  <section class="view" id="view-care">
+    <div class="card">
+      <h2>为你推荐</h2>
+      <p class="sub">根据你最近的情绪状态自动匹配</p>
+      <div id="recoList"></div>
+    </div>
+    <div class="card">
+      <h2>随时可用的小工具</h2>
+      <div class="tool-row">
+        <button class="tool-btn" id="toolBreathe"><span class="icon-circ" style="background:var(--indigo-soft)">🌬️</span><span class="lbl">呼吸</span></button>
+        <button class="tool-btn" id="toolStretch"><span class="icon-circ" style="background:var(--sage-soft)">🤸</span><span class="lbl">伸展</span></button>
+        <button class="tool-btn" id="toolGame"><span class="icon-circ" style="background:var(--teal-soft)">🫧</span><span class="lbl">泡泡</span></button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- breathing overlay -->
+<div class="overlay" id="breatheOverlay">
+  <div class="overlay-box">
+    <h3>跟随呼吸</h3>
+    <div class="breathe-circle" id="breatheCircle">吸气</div>
+    <p class="sub" style="margin:0;" id="breatheCount">4 轮，约 1 分钟</p>
+    <button class="close-x" id="closeBreathe">结束</button>
+  </div>
+</div>
+
+<!-- stretch overlay -->
+<div class="overlay" id="stretchOverlay">
+  <div class="overlay-box">
+    <h3 id="stretchName">颈部侧拉伸</h3>
+    <p class="sub" id="stretchDesc" style="margin:2px 0 0;">缓慢向右侧倾斜头部，感受左侧颈部的拉伸</p>
+    <div class="stretch-illus" id="stretchIllus">🧍</div>
+    <div class="stretch-timer" id="stretchTimer">20</div>
+    <div class="stretch-progress" id="stretchProgress"></div>
+    <div class="overlay-actions">
+      <button id="stretchSkip">跳过</button>
+      <button class="primary" id="stretchPause">暂停</button>
+    </div>
+    <button class="close-x" id="closeStretch">结束训练</button>
+  </div>
+</div>
+
+<!-- bubble game overlay -->
+<div class="overlay" id="gameOverlay">
+  <div class="overlay-box" style="max-width:380px;">
+    <h3>泡泡解压</h3>
+    <p class="sub" style="margin:2px 0 6px;">戳破飘起来的泡泡，不用想别的</p>
+    <div class="game-score">已戳破 <b id="gameScore">0</b> 个</div>
+    <div class="bubble-field" id="bubbleField"></div>
+    <button class="close-x" id="closeGame">结束</button>
+  </div>
+</div>
+
+<!-- walk overlay -->
+<div class="overlay" id="walkOverlay">
+  <div class="overlay-box">
+    <h3>散步一下</h3>
+    <p class="sub" style="margin:2px 0 0;">选个时长，离开当前的位置走一走</p>
+    <div class="dur-chips" id="walkDurChips"></div>
+    <div class="walk-ring-wrap">
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        <circle cx="90" cy="90" r="80" fill="none" stroke="var(--line)" stroke-width="10"/>
+        <circle id="walkRing" cx="90" cy="90" r="80" fill="none" stroke="var(--sage)" stroke-width="10"
+          stroke-linecap="round" stroke-dasharray="502.4" stroke-dashoffset="502.4"
+          transform="rotate(-90 90 90)"/>
+      </svg>
+      <div class="walk-figure" id="walkFigure">🚶</div>
+    </div>
+    <div class="walk-time" id="walkTime">10:00</div>
+    <div class="overlay-actions">
+      <button id="walkStart" class="primary">开始</button>
+      <button id="walkPause">暂停</button>
+    </div>
+    <button class="close-x" id="closeWalk">结束</button>
+  </div>
+</div>
+
+<!-- sound overlay (music) -->
+<div class="overlay" id="soundOverlay">
+  <div class="overlay-box">
+    <h3 id="soundTitle">环境音</h3>
+    <p class="sub" style="margin:2px 0 10px;">戴上耳机效果更好</p>
+    <div class="sound-presets" id="soundPresets">
+      <button class="sound-preset-btn" data-preset="calm">舒缓</button>
+      <button class="sound-preset-btn" data-preset="energize">律动</button>
+    </div>
+    <div class="sound-visual" id="soundVisual"></div>
+    <button class="play-toggle" id="soundToggle">▶</button>
+    <button class="close-x" id="closeSound">结束</button>
+  </div>
+</div>
+
+<!-- journal overlay -->
+<div class="overlay" id="journalOverlay">
+  <div class="overlay-box" style="max-width:380px;">
+    <h3>三件小事</h3>
+    <p class="sub" style="margin:2px 0 14px;">今天有什么，哪怕很微小，让你觉得还行？</p>
+    <div class="journal-field"><label>1</label><input type="text" id="g1" placeholder="比如：中午的咖啡还不错"></div>
+    <div class="journal-field"><label>2</label><input type="text" id="g2" placeholder="……"></div>
+    <div class="journal-field"><label>3</label><input type="text" id="g3" placeholder="……"></div>
+    <button class="btn-primary" id="journalSave" style="margin-top:6px;">保存</button>
+    <div class="gratitude-hist" id="gratitudeHist"></div>
+    <button class="close-x" id="closeJournal">关闭</button>
+  </div>
+</div>
+
+<!-- rest overlay -->
+<div class="overlay" id="restOverlay">
+  <div class="overlay-box" style="max-width:380px;">
+    <h3>睡前清单</h3>
+    <p class="sub" style="margin:2px 0 6px;">点一项，做一项</p>
+    <div id="restChecklist"></div>
+    <button class="reco-cta" id="restSound" style="background:var(--blue); margin-top:14px; width:100%; justify-content:center;">🎧 播放助眠白噪音</button>
+    <button class="close-x" id="closeRest">关闭</button>
+  </div>
+</div>
+
+<!-- talk overlay -->
+<div class="overlay" id="talkOverlay">
+  <div class="overlay-box" style="max-width:380px;">
+    <h3>想找人聊聊？</h3>
+    <p class="sub" style="margin:2px 0 12px;">先在这里把想说的话理一理</p>
+    <div class="starter-chip" id="talkStarter">最近有点不太好，能占用你几分钟吗？</div>
+    <textarea id="talkText" placeholder="把开场白改成你自己的话，或者接着往下写…" style="min-height:100px;"></textarea>
+    <div class="overlay-actions">
+      <button id="talkShuffle">换一句</button>
+      <button id="talkCopy" class="primary">复制</button>
+    </div>
+    <button class="close-x" id="closeTalk">关闭</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+try{
+(function(){
+  const MOODS = [
+    {v:1, emoji:'😞', label:'低落'},
+    {v:2, emoji:'😕', label:'烦躁'},
+    {v:3, emoji:'😐', label:'平淡'},
+    {v:4, emoji:'🙂', label:'还不错'},
+    {v:5, emoji:'😄', label:'愉快'},
+  ];
+  const INTENSITY_TEXT = {1:'很轻 · 几乎不太在意', 2:'较轻 · 有一点感觉', 3:'中等 · 感受比较明显', 4:'较强 · 影响到了状态', 5:'很强 · 占据了大部分注意力'};
+  const TRIGGERS = ['学业','职场','人际关系','家庭','健康','经济','无特别原因'];
+
+  const CATS = {
+    breathe:{color:'var(--indigo)', soft:'var(--indigo-soft)', label:'呼吸'},
+    move:   {color:'var(--sage)',   soft:'var(--sage-soft)',   label:'运动'},
+    music:  {color:'var(--amber)',  soft:'var(--amber-soft)',  label:'音乐'},
+    write:  {color:'var(--coral)',  soft:'var(--coral-soft)',  label:'写作'},
+    talk:   {color:'var(--teal)',   soft:'var(--teal-soft)',   label:'社交'},
+    rest:   {color:'var(--blue)',   soft:'var(--blue-soft)',   label:'睡眠'},
+  };
+
+  const RECOS = [
+    {icon:'🌬️', title:'4-7-8 呼吸练习', desc:'吸气4秒、屏息7秒、呼气8秒，快速平复紧张感。', moods:[1,2], action:'breathe', cat:'breathe', cta:'开始练习'},
+    {icon:'🎵', title:'低频环境音乐', desc:'舒缓的环境音，帮助大脑从紧绷切换到放松。', moods:[1,2], action:'music-calm', cat:'music', cta:'播放'},
+    {icon:'🚶', title:'10分钟散步', desc:'离开当前环境，哪怕只是绕楼下走一圈，能有效打断反刍思维。', moods:[1,2,3], action:'walk', cat:'move', cta:'开始计时'},
+    {icon:'🤸', title:'颈肩腰腿伸展', desc:'久坐后的酸痛常常放大烦躁感，跟着做一组5分钟拉伸。', moods:[2,3], triggers:['学业','职场'], action:'stretch', cat:'move', cta:'开始训练'},
+    {icon:'📝', title:'写下三件小事', desc:'记录今天让你觉得还行的三件小事，哪怕很微小。', moods:[3,4], action:'journal', cat:'write', cta:'去写写'},
+    {icon:'🎧', title:'活力律动音效', desc:'状态不错时，用有节奏感的音效延续这份能量。', moods:[4,5], action:'music-energize', cat:'music', cta:'播放'},
+    {icon:'💬', title:'找人聊聊', desc:'如果人际关系是主要触发因素，一次坦诚的对话往往比独自消化更有效。', moods:[1,2], triggers:['人际关系','家庭'], action:'talk', cat:'talk', cta:'理一理思路'},
+    {icon:'🌙', title:'提前休息', desc:'健康或经济压力容易让人失眠，今晚试着走一遍睡前清单。', moods:[1,2,3], triggers:['健康','经济'], action:'rest', cat:'rest', cta:'查看清单'},
+    {icon:'🫧', title:'泡泡解压小游戏', desc:'不需要动脑的纯感官放松，戳几分钟泡泡，给大脑按下暂停键。', moods:[1,2,3], action:'game', cat:'breathe', cta:'开始放松'},
+  ];
+
+  const STRETCH_STEPS = [
+    {name:'颈部侧拉伸', desc:'缓慢向右侧倾斜头部，感受左侧颈部拉伸，然后换边', illus:'🧍', dur:20},
+    {name:'肩部绕环', desc:'双肩由前向后缓慢画圈，放松肩颈紧绷感', illus:'🙆', dur:20},
+    {name:'手腕伸展', desc:'手臂前伸，掌心向外，用另一只手轻压手指', illus:'🤲', dur:15},
+    {name:'坐姿膝屈伸', desc:'坐直，缓慢伸直单侧膝盖再收回，交替进行', illus:'🦵', dur:20},
+    {name:'踝泵运动', desc:'脚尖缓慢上勾再下压，改善久坐后的腿部血液循环', illus:'🦶', dur:20},
+  ];
+
+  const TALK_STARTERS = [
+    '最近有点不太好，能占用你几分钟吗？',
+    '我今天状态不太好，只是想找个人说说，不用给建议。',
+    '有件事一直压着我，能不能找时间聊聊？',
+    '最近压力有点大，你现在方便说话吗？',
+    '不知道该怎么开口，但我需要找人聊聊最近的事。',
+  ];
+
+  const REST_ITEMS = ['调暗灯光', '放下手机 / 开飞行模式', '喝一杯温水', '写下明天最重要的一件事', '设置一个安心的起床闹钟'];
+
+  const STORAGE_KEY = 'moodDiaryEntries_v1';
+  const GRAT_KEY = 'moodDiaryGratitude_v1';
+  let entries = [], gratitude = [];
+  try{ entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ entries = []; }
+  try{ gratitude = JSON.parse(localStorage.getItem(GRAT_KEY) || '[]'); }catch(e){ gratitude = []; }
+
+  let selectedMood = null;
+  let selectedTriggers = new Set();
+
+  const hour = new Date().getHours();
+  const greet = hour<6?'夜深了':hour<11?'早上好':hour<14?'中午好':hour<18?'下午好':hour<22?'晚上好':'夜深了';
+  document.getElementById('greeting').innerHTML = `${greet} · <b>${new Date().toLocaleDateString('zh-CN', {month:'long', day:'numeric', weekday:'short'})}</b>`;
+
+  // ---- tabs ----
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-'+btn.dataset.tab).classList.add('active');
+      if(btn.dataset.tab==='review') renderReview();
+      if(btn.dataset.tab==='care') renderCare();
+    });
+  });
+
+  // ---- mood grid ----
+  const moodGrid = document.getElementById('moodGrid');
+  MOODS.forEach(m=>{
+    const b = document.createElement('button');
+    b.className='mood-btn'; b.type='button';
+    b.innerHTML = `<span class="emoji">${m.emoji}</span><span class="label">${m.label}</span>`;
+    b.addEventListener('click', ()=>{
+      selectedMood = m;
+      document.querySelectorAll('.mood-btn').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+      document.getElementById('saveBtn').disabled = false;
+    });
+    moodGrid.appendChild(b);
+  });
+
+  // ---- trigger chips ----
+  const chipWrap = document.getElementById('triggerChips');
+  TRIGGERS.forEach(t=>{
+    const c = document.createElement('button');
+    c.className='chip'; c.type='button'; c.textContent=t;
+    c.addEventListener('click', ()=>{
+      if(selectedTriggers.has(t)){ selectedTriggers.delete(t); c.classList.remove('selected'); }
+      else{ selectedTriggers.add(t); c.classList.add('selected'); }
+    });
+    chipWrap.appendChild(c);
+  });
+
+  const intensityInput = document.getElementById('intensity');
+  const intensityReadout = document.getElementById('intensityReadout');
+  function updateIntensityReadout(){ intensityReadout.textContent = INTENSITY_TEXT[intensityInput.value]; }
+  intensityInput.addEventListener('input', updateIntensityReadout);
+  updateIntensityReadout();
+
+  document.getElementById('saveBtn').addEventListener('click', ()=>{
+    if(!selectedMood) return;
+    entries.unshift({
+      id: Date.now(), ts: new Date().toISOString(), mood: selectedMood,
+      intensity: parseInt(intensityInput.value,10), triggers: Array.from(selectedTriggers),
+      note: document.getElementById('noteInput').value.trim(),
+    });
+    persistEntries();
+    selectedMood = null; selectedTriggers = new Set();
+    document.querySelectorAll('.mood-btn').forEach(x=>x.classList.remove('selected'));
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('selected'));
+    document.getElementById('noteInput').value='';
+    intensityInput.value=3; updateIntensityReadout();
+    document.getElementById('saveBtn').disabled = true;
+    showToast('已记录 ✓ 去「回顾」看看趋势吧');
+  });
+
+  function persistEntries(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }catch(e){} }
+  function persistGratitude(){ try{ localStorage.setItem(GRAT_KEY, JSON.stringify(gratitude)); }catch(e){} }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+  function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function dateKey(d){ const dt=new Date(d); return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+  function moodColor(v){
+    const stops = {1:'#D97B5F',2:'#D08F5C',3:'#B0812F',4:'#7DA06E',5:'#5E8C63'};
+    return stops[Math.round(v)] || 'var(--line)';
+  }
+
+  // ================= REVIEW =================
+  let chartInstance=null, radarInstance=null, selectedDayKey=null;
+
+  function renderCalendar(){
+    const dowEl = document.getElementById('calDow');
+    if(dowEl.children.length===0){
+      ['一','二','三','四','五','六','日'].forEach(d=>{ const s=document.createElement('div'); s.className='cal-dow'; s.textContent=d; dowEl.appendChild(s); });
+    }
+    const grid = document.getElementById('calGrid'); grid.innerHTML='';
+    const days = 35;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const start = new Date(today); start.setDate(start.getDate()-(days-1));
+    let lead = (start.getDay()+6)%7;
+    for(let i=0;i<lead;i++){ const c=document.createElement('div'); c.className='cal-cell empty-cell'; grid.appendChild(c); }
+    const byDay = {};
+    entries.forEach(e=>{ const k=dateKey(e.ts); (byDay[k]=byDay[k]||[]).push(e); });
+    for(let i=0;i<days;i++){
+      const d = new Date(start); d.setDate(start.getDate()+i);
+      const k = dateKey(d);
+      const dayEntries = byDay[k];
+      const cell = document.createElement('div');
+      cell.className='cal-cell'; cell.textContent = d.getDate();
+      if(dayEntries && dayEntries.length){
+        const avg = dayEntries.reduce((s,e)=>s+e.mood.v,0)/dayEntries.length;
+        cell.style.background = moodColor(avg); cell.style.color = '#fff';
+      }
+      if(k===selectedDayKey) cell.classList.add('selected');
+      cell.addEventListener('click', ()=>{
+        selectedDayKey = (selectedDayKey===k)? null : k;
+        renderCalendar(); renderDayDetail(k, byDay[k]);
+      });
+      grid.appendChild(cell);
+    }
+    if(!selectedDayKey) document.getElementById('dayDetail').classList.remove('show');
+  }
+
+  function renderDayDetail(k, list){
+    const el = document.getElementById('dayDetail');
+    if(!selectedDayKey || !list || list.length===0){ el.classList.remove('show'); el.innerHTML=''; return; }
+    el.classList.add('show');
+    const dt = new Date(k);
+    const label = dt.toLocaleDateString('zh-CN',{month:'long', day:'numeric', weekday:'long'});
+    el.innerHTML = `<div class="row-label" style="margin-top:0">${label}</div>` + list.map(e=>{
+      const tags = e.triggers.map(t=>`<span>${t}</span>`).join('');
+      return `<div class="tl-item" style="padding-bottom:12px;">
+        <div class="meta">${e.mood.emoji} ${e.mood.label} · 强度 ${e.intensity}</div>
+        ${tags?`<div class="tags">${tags}</div>`:''}
+        ${e.note?`<div class="note">${escapeHtml(e.note)}</div>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  function renderTimeline(){
+    const list = document.getElementById('entryList');
+    if(entries.length===0){ list.innerHTML = `<div class="empty"><span class="big">🌱</span>还没有记录<br>去「记录」写下第一条吧</div>`; return; }
+    list.innerHTML = entries.slice(0,20).map(e=>{
+      const d = new Date(e.ts);
+      const time = d.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      const tags = e.triggers.map(t=>`<span>${t}</span>`).join('');
+      return `<div class="tl-item">
+        <div class="tl-dot" style="border-color:${moodColor(e.mood.v)}">${e.mood.emoji}</div>
+        <div class="meta">${time} · ${e.mood.label} · 强度 ${e.intensity}</div>
+        ${tags?`<div class="tags">${tags}</div>`:''}
+        ${e.note?`<div class="note">${escapeHtml(e.note)}</div>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  function renderTrendChart(){
+    const ctx = document.getElementById('trendChart');
+    const recent = entries.slice(0,14).reverse();
+    const labels = recent.map(e=> new Date(e.ts).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'}));
+    const data = recent.map(e=> e.mood.v);
+    if(chartInstance) chartInstance.destroy();
+    if(recent.length>0){
+      chartInstance = new Chart(ctx, {
+        type:'line',
+        data:{ labels, datasets:[{ data, borderColor:'#4A4470', backgroundColor:'rgba(74,68,112,0.12)', fill:true, tension:0.35, pointRadius:3, pointBackgroundColor:'#4A4470' }]},
+        options:{ plugins:{legend:{display:false}},
+          scales:{ y:{min:0.5,max:5.5, ticks:{stepSize:1, callback:v=> (MOODS.find(m=>m.v===v)||{}).emoji || ''}}, x:{grid:{display:false}} } }
+      });
+    }
+  }
+
+  function renderRadar(){
+    const ctx = document.getElementById('radarChart');
+    const counts = {}; TRIGGERS.forEach(t=> counts[t]=0);
+    entries.forEach(e=> e.triggers.forEach(t=>{ if(counts[t]!==undefined) counts[t]++; }));
+    if(radarInstance) radarInstance.destroy();
+    radarInstance = new Chart(ctx, {
+      type:'radar',
+      data:{ labels:TRIGGERS, datasets:[{ data:TRIGGERS.map(t=>counts[t]), backgroundColor:'rgba(74,68,112,0.18)', borderColor:'#4A4470', pointBackgroundColor:'#4A4470' }] },
+      options:{ plugins:{legend:{display:false}}, scales:{ r:{ beginAtZero:true, ticks:{ stepSize:1, display:false }, grid:{color:'rgba(74,68,112,0.15)'}, pointLabels:{font:{size:11}} } } }
+    });
+  }
+
+  function renderInsightList(){
+    const counts = {};
+    entries.forEach(e=>{ if(e.mood.v<=2){ e.triggers.forEach(t=> counts[t]=(counts[t]||0)+1); } });
+    const insightEl = document.getElementById('insightList');
+    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    if(sorted.length===0){
+      insightEl.innerHTML = `<p class="sub" style="margin:0">暂时还看不出明显规律，多记录几次会更准确。</p>`;
+    } else {
+      const max = sorted[0][1];
+      insightEl.innerHTML = sorted.map(([t,c])=>`
+        <div class="insight-row"><div class="label">${t}</div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${(c/max*100).toFixed(0)}%"></div></div>
+          <div class="count">${c}次</div></div>`).join('');
+    }
+  }
+
+  function renderReview(){ renderCalendar(); renderTimeline(); renderTrendChart(); renderRadar(); renderInsightList(); }
+
+  // ================= CARE =================
+  function renderCare(){
+    const el = document.getElementById('recoList');
+    const recent = entries.slice(0,5);
+    let moodLevel = recent.length ? Math.round(recent.reduce((s,e)=>s+e.mood.v,0)/recent.length) : 3;
+    const recentTriggers = new Set();
+    recent.forEach(e=> e.triggers.forEach(t=>recentTriggers.add(t)));
+
+    let matches = RECOS.filter(r=> r.moods.includes(moodLevel));
+    matches.sort((a,b)=>{
+      const aMatch = a.triggers && a.triggers.some(t=>recentTriggers.has(t)) ? 1:0;
+      const bMatch = b.triggers && b.triggers.some(t=>recentTriggers.has(t)) ? 1:0;
+      return bMatch-aMatch;
+    });
+    if(matches.length===0) matches = RECOS.slice(0,3);
+
+    el.innerHTML='';
+    matches.slice(0,4).forEach(r=>{
+      const cat = CATS[r.cat];
+      const div = document.createElement('div');
+      div.className='reco-card';
+      div.innerHTML = `
+        <div class="reco-icon" style="background:${cat.soft}">${r.icon}</div>
+        <div style="flex:1">
+          <span class="reco-tag" style="background:${cat.soft}; color:${cat.color}">${cat.label}</span>
+          <h3>${r.title}</h3>
+          <p>${r.desc}</p>
+          <button class="reco-cta" style="background:${cat.color}" data-action="${r.action}">${r.cta}</button>
+        </div>`;
+      el.appendChild(div);
+    });
+    el.querySelectorAll('button[data-action]').forEach(b=>{
+      b.addEventListener('click', ()=>runAction(b.dataset.action));
+    });
+  }
+
+  function runAction(a){
+    if(a==='breathe') startBreathing();
+    else if(a==='stretch') startStretch();
+    else if(a==='game') startGame();
+    else if(a==='walk') openWalk();
+    else if(a==='journal') openJournal();
+    else if(a==='rest') openRest();
+    else if(a==='talk') openTalk();
+    else if(a==='music-calm') openSound('calm');
+    else if(a==='music-energize') openSound('energize');
+  }
+
+  document.getElementById('toolBreathe').addEventListener('click', startBreathing);
+  document.getElementById('toolStretch').addEventListener('click', startStretch);
+  document.getElementById('toolGame').addEventListener('click', startGame);
+
+  // ---- breathing ----
+  let breatheTimer = null;
+  function startBreathing(){
+    const overlay = document.getElementById('breatheOverlay');
+    const circle = document.getElementById('breatheCircle');
+    const countEl = document.getElementById('breatheCount');
+    overlay.classList.add('active');
+    let round = 0;
+    const phases = [ {name:'吸气', cls:'in', dur:4000}, {name:'屏息', cls:'in', dur:7000}, {name:'呼气', cls:'out', dur:8000} ];
+    let pIdx = 0;
+    function step(){
+      if(round>=4){ stopBreathing(); return; }
+      const p = phases[pIdx];
+      circle.textContent = p.name; circle.className = 'breathe-circle ' + p.cls;
+      countEl.textContent = `第 ${round+1}/4 轮`;
+      breatheTimer = setTimeout(()=>{ pIdx++; if(pIdx>=phases.length){ pIdx=0; round++; } step(); }, p.dur);
+    }
+    step();
+  }
+  function stopBreathing(){ clearTimeout(breatheTimer); document.getElementById('breatheOverlay').classList.remove('active'); }
+  document.getElementById('closeBreathe').addEventListener('click', stopBreathing);
+
+  // ---- stretch ----
+  let stretchIdx=0, stretchRemain=0, stretchTick=null, stretchPaused=false;
+  function startStretch(){
+    stretchIdx = 0;
+    document.getElementById('stretchOverlay').classList.add('active');
+    document.getElementById('stretchProgress').innerHTML = STRETCH_STEPS.map((_,i)=>`<span data-i="${i}"></span>`).join('');
+    loadStretchStep();
+  }
+  function updateStretchProgress(){
+    document.querySelectorAll('#stretchProgress span').forEach((s,i)=>{ s.classList.toggle('done', i<stretchIdx); s.classList.toggle('now', i===stretchIdx); });
+  }
+  function loadStretchStep(){
+    if(stretchIdx>=STRETCH_STEPS.length){ finishStretch(); return; }
+    const s = STRETCH_STEPS[stretchIdx];
+    document.getElementById('stretchName').textContent = s.name;
+    document.getElementById('stretchDesc').textContent = s.desc;
+    document.getElementById('stretchIllus').textContent = s.illus;
+    stretchRemain = s.dur;
+    document.getElementById('stretchTimer').textContent = stretchRemain;
+    updateStretchProgress();
+    stretchPaused = false;
+    document.getElementById('stretchPause').textContent = '暂停';
+    clearInterval(stretchTick);
+    stretchTick = setInterval(()=>{
+      if(stretchPaused) return;
+      stretchRemain--;
+      document.getElementById('stretchTimer').textContent = stretchRemain;
+      if(stretchRemain<=0){ clearInterval(stretchTick); stretchIdx++; loadStretchStep(); }
+    }, 1000);
+  }
+  function finishStretch(){ clearInterval(stretchTick); document.getElementById('stretchOverlay').classList.remove('active'); showToast('伸展训练完成，感觉如何？'); }
+  document.getElementById('stretchSkip').addEventListener('click', ()=>{ clearInterval(stretchTick); stretchIdx++; loadStretchStep(); });
+  document.getElementById('stretchPause').addEventListener('click', (e)=>{ stretchPaused = !stretchPaused; e.target.textContent = stretchPaused ? '继续' : '暂停'; });
+  document.getElementById('closeStretch').addEventListener('click', ()=>{ clearInterval(stretchTick); document.getElementById('stretchOverlay').classList.remove('active'); });
+
+  // ---- bubble game ----
+  let gameSpawner=null, gameScore=0;
+  function startGame(){
+    gameScore = 0; document.getElementById('gameScore').textContent = gameScore;
+    document.getElementById('gameOverlay').classList.add('active');
+    const field = document.getElementById('bubbleField'); field.innerHTML='';
+    clearInterval(gameSpawner);
+    gameSpawner = setInterval(spawnBubble, 700);
+  }
+  function spawnBubble(){
+    const field = document.getElementById('bubbleField'); if(!field) return;
+    const size = 30 + Math.random()*40;
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.style.width = size+'px'; b.style.height = size+'px';
+    b.style.left = (Math.random()*(field.clientWidth-size))+'px'; b.style.bottom = '-50px';
+    b.style.animationDuration = (4+Math.random()*3)+'s';
+    b.addEventListener('click', ()=>{
+      if(b.classList.contains('pop')) return;
+      b.classList.add('pop'); gameScore++;
+      document.getElementById('gameScore').textContent = gameScore;
+      setTimeout(()=> b.remove(), 260);
+    });
+    b.addEventListener('animationend', ()=>{ if(b.parentNode) b.remove(); });
+    field.appendChild(b);
+  }
+  document.getElementById('closeGame').addEventListener('click', ()=>{ clearInterval(gameSpawner); document.getElementById('gameOverlay').classList.remove('active'); });
+
+  // ---- walk ----
+  let walkTotal=600, walkRemain=600, walkTick=null, walkRunning=false;
+  const walkRing = document.getElementById('walkRing');
+  const RING_LEN = 502.4;
+  function buildWalkChips(){
+    const wrap = document.getElementById('walkDurChips'); wrap.innerHTML='';
+    [5,10,15].forEach(m=>{
+      const c = document.createElement('button');
+      c.className='dur-chip' + (m===10?' selected':''); c.textContent = m+' 分钟'; c.dataset.min = m;
+      c.addEventListener('click', ()=>{
+        if(walkRunning) return;
+        document.querySelectorAll('.dur-chip').forEach(x=>x.classList.remove('selected'));
+        c.classList.add('selected');
+        walkTotal = m*60; walkRemain = walkTotal; updateWalkDisplay();
+      });
+      wrap.appendChild(c);
+    });
+  }
+  function updateWalkDisplay(){
+    const mm = String(Math.floor(walkRemain/60)).padStart(2,'0');
+    const ss = String(walkRemain%60).padStart(2,'0');
+    document.getElementById('walkTime').textContent = `${mm}:${ss}`;
+    const progress = 1 - walkRemain/walkTotal;
+    walkRing.style.strokeDashoffset = RING_LEN * (1-progress);
+  }
+  function openWalk(){
+    walkTotal = 600; walkRemain = 600; walkRunning = false;
+    buildWalkChips(); updateWalkDisplay();
+    document.getElementById('walkFigure').classList.remove('animate');
+    document.getElementById('walkOverlay').classList.add('active');
+  }
+  document.getElementById('walkStart').addEventListener('click', ()=>{
+    if(walkRunning) return;
+    walkRunning = true;
+    document.getElementById('walkFigure').classList.add('animate');
+    clearInterval(walkTick);
+    walkTick = setInterval(()=>{
+      walkRemain--; updateWalkDisplay();
+      if(walkRemain<=0){ clearInterval(walkTick); walkRunning=false; document.getElementById('walkFigure').classList.remove('animate'); showToast('散步完成，感觉怎么样？'); }
+    }, 1000);
+  });
+  document.getElementById('walkPause').addEventListener('click', ()=>{
+    walkRunning = false; clearInterval(walkTick);
+    document.getElementById('walkFigure').classList.remove('animate');
+  });
+  document.getElementById('closeWalk').addEventListener('click', ()=>{
+    clearInterval(walkTick); walkRunning=false;
+    document.getElementById('walkOverlay').classList.remove('active');
+  });
+
+  // ---- sound (Web Audio) ----
+  let audioCtx=null, soundNodes=null, soundPlaying=false, soundPreset='calm', arpTimer=null, analyser=null, vizRaf=null;
+  function ensureCtx(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+  function buildVisualBars(){
+    const v = document.getElementById('soundVisual'); v.innerHTML='';
+    for(let i=0;i<20;i++){ const bar=document.createElement('div'); bar.className='bar'; v.appendChild(bar); }
+  }
+  function drawViz(){
+    if(!analyser) return;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    const bars = document.querySelectorAll('#soundVisual .bar');
+    const step = Math.floor(data.length/bars.length) || 1;
+    bars.forEach((b,i)=>{ const val = data[i*step] || 0; b.style.height = Math.max(6, (val/255)*70)+'px'; });
+    vizRaf = requestAnimationFrame(drawViz);
+  }
+  function stopSound(){
+    soundPlaying = false;
+    document.getElementById('soundToggle').textContent = '▶';
+    if(vizRaf) cancelAnimationFrame(vizRaf);
+    clearInterval(arpTimer);
+    if(soundNodes){
+      try{ soundNodes.forEach(n=>{ if(n.stop) n.stop(); }); }catch(e){}
+      soundNodes = null;
+    }
+    document.querySelectorAll('#soundVisual .bar').forEach(b=> b.style.height='8px');
+  }
+  function playCalm(){
+    const ctx = ensureCtx();
+    const bufferSize = 2*ctx.sampleRate;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    let lastOut = 0;
+    for(let i=0;i<bufferSize;i++){
+      const white = Math.random()*2-1;
+      lastOut = (lastOut + 0.02*white)/1.02;
+      output[i] = lastOut*6;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer; noise.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type='lowpass'; filter.frequency.value = 500;
+    const gain = ctx.createGain(); gain.gain.value = 0.0001;
+    analyser = ctx.createAnalyser(); analyser.fftSize = 64;
+    noise.connect(filter); filter.connect(gain); gain.connect(analyser); analyser.connect(ctx.destination);
+    noise.start();
+    gain.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime+1.2);
+    soundNodes = [noise];
+  }
+  function playEnergize(){
+    const ctx = ensureCtx();
+    analyser = ctx.createAnalyser(); analyser.fftSize = 64;
+    const master = ctx.createGain(); master.gain.value = 0.35;
+    master.connect(analyser); analyser.connect(ctx.destination);
+    const scale = [261.6,293.7,329.6,392.0,440.0,523.3];
+    soundNodes = [];
+    function pluck(){
+      const freq = scale[Math.floor(Math.random()*scale.length)];
+      const osc = ctx.createOscillator(); osc.type='triangle'; osc.frequency.value = freq;
+      const g = ctx.createGain(); g.gain.value = 0.0001;
+      osc.connect(g); g.connect(master);
+      osc.start();
+      g.gain.exponentialRampToValueAtTime(0.6, ctx.currentTime+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5);
+      osc.stop(ctx.currentTime+0.55);
+    }
+    arpTimer = setInterval(pluck, 420);
+    pluck();
+  }
+  function openSound(preset){
+    soundPreset = preset;
+    document.getElementById('soundTitle').textContent = preset==='calm' ? '舒缓环境音' : '活力律动音效';
+    document.querySelectorAll('.sound-preset-btn').forEach(b=> b.classList.toggle('selected', b.dataset.preset===preset));
+    buildVisualBars();
+    document.getElementById('soundOverlay').classList.add('active');
+    stopSound();
+  }
+  document.querySelectorAll('.sound-preset-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      soundPreset = b.dataset.preset;
+      document.querySelectorAll('.sound-preset-btn').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+      document.getElementById('soundTitle').textContent = soundPreset==='calm' ? '舒缓环境音' : '活力律动音效';
+      if(soundPlaying){ stopSound(); toggleSound(); }
+    });
+  });
+  function toggleSound(){
+    if(soundPlaying){ stopSound(); return; }
+    if(soundPreset==='calm') playCalm(); else playEnergize();
+    soundPlaying = true;
+    document.getElementById('soundToggle').textContent = '❚❚';
+    drawViz();
+  }
+  document.getElementById('soundToggle').addEventListener('click', toggleSound);
+  document.getElementById('closeSound').addEventListener('click', ()=>{ stopSound(); document.getElementById('soundOverlay').classList.remove('active'); });
+
+  // ---- journal (gratitude) ----
+  function renderGratitudeHist(){
+    const el = document.getElementById('gratitudeHist');
+    if(gratitude.length===0){ el.innerHTML = `<p class="sub" style="margin:0; text-align:center;">保存后会在这里回看</p>`; return; }
+    el.innerHTML = gratitude.slice(0,5).map(g=>{
+      const d = new Date(g.ts).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
+      return `<div class="g-item"><div class="g-date">${d}</div><ul>${g.items.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul></div>`;
+    }).join('');
+  }
+  function openJournal(){
+    document.getElementById('g1').value=''; document.getElementById('g2').value=''; document.getElementById('g3').value='';
+    renderGratitudeHist();
+    document.getElementById('journalOverlay').classList.add('active');
+  }
+  document.getElementById('journalSave').addEventListener('click', ()=>{
+    const items = [document.getElementById('g1').value.trim(), document.getElementById('g2').value.trim(), document.getElementById('g3').value.trim()].filter(Boolean);
+    if(items.length===0){ showToast('写一点什么再保存吧'); return; }
+    gratitude.unshift({ts:new Date().toISOString(), items});
+    persistGratitude();
+    document.getElementById('g1').value=''; document.getElementById('g2').value=''; document.getElementById('g3').value='';
+    renderGratitudeHist();
+    showToast('已保存 ✓');
+  });
+  document.getElementById('closeJournal').addEventListener('click', ()=> document.getElementById('journalOverlay').classList.remove('active'));
+
+  // ---- rest checklist ----
+  let restChecked = new Set();
+  function openRest(){
+    const el = document.getElementById('restChecklist');
+    el.innerHTML = REST_ITEMS.map((t,i)=>`
+      <div class="rest-check${restChecked.has(i)?' checked':''}" data-i="${i}">
+        <div class="box">${restChecked.has(i)?'✓':''}</div><div class="txt">${t}</div>
+      </div>`).join('');
+    el.querySelectorAll('.rest-check').forEach(item=>{
+      item.addEventListener('click', ()=>{
+        const i = parseInt(item.dataset.i,10);
+        if(restChecked.has(i)) restChecked.delete(i); else restChecked.add(i);
+        openRest();
+      });
+    });
+    document.getElementById('restOverlay').classList.add('active');
+  }
+  document.getElementById('restSound').addEventListener('click', ()=>{ openSound('calm'); });
+  document.getElementById('closeRest').addEventListener('click', ()=> document.getElementById('restOverlay').classList.remove('active'));
+
+  // ---- talk composer ----
+  let talkIdx = 0;
+  function openTalk(){
+    talkIdx = Math.floor(Math.random()*TALK_STARTERS.length);
+    document.getElementById('talkStarter').textContent = TALK_STARTERS[talkIdx];
+    document.getElementById('talkText').value = TALK_STARTERS[talkIdx];
+    document.getElementById('talkOverlay').classList.add('active');
+  }
+  document.getElementById('talkShuffle').addEventListener('click', ()=>{
+    let next; do{ next = Math.floor(Math.random()*TALK_STARTERS.length); }while(next===talkIdx && TALK_STARTERS.length>1);
+    talkIdx = next;
+    document.getElementById('talkStarter').textContent = TALK_STARTERS[talkIdx];
+    document.getElementById('talkText').value = TALK_STARTERS[talkIdx];
+  });
+  document.getElementById('talkCopy').addEventListener('click', ()=>{
+    const text = document.getElementById('talkText').value;
+    try{ navigator.clipboard.writeText(text); showToast('已复制到剪贴板'); }
+    catch(e){ showToast('复制失败，手动选中试试'); }
+  });
+  document.getElementById('closeTalk').addEventListener('click', ()=> document.getElementById('talkOverlay').classList.remove('active'));
+
+  renderReview();
+})();
+}catch(e){ console.error(e); }
+</script>
+</body>
+</html>
